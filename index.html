@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Поиск сокровищ книг — школьная библиотека</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Trebuchet MS', sans-serif;
+            background: #2e241f;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Основной контейнер игры */
+        .game-container {
+            max-width: 1300px;
+            width: 100%;
+            background: #f7ecd9;
+            border-radius: 48px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.4);
+            overflow: hidden;
+            padding: 20px 20px 25px;
+            transition: all 0.2s;
+        }
+
+        /* Слайды (приветствие и финал) */
+        .slide-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.3s ease;
+        }
+
+        .slide-card {
+            background: #fef3e2;
+            max-width: 600px;
+            width: 90%;
+            border-radius: 64px;
+            padding: 30px 28px 40px;
+            text-align: center;
+            box-shadow: 0 30px 40px rgba(0,0,0,0.4);
+            border: 2px solid #ffcd94;
+            animation: floatIn 0.4s ease-out;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .slide-card h1 {
+            font-size: 2.5rem;
+            color: #804e2c;
+            margin-bottom: 16px;
+            font-weight: bold;
+        }
+
+        .slide-card h2 {
+            font-size: 1.8rem;
+            color: #b1622c;
+            margin-bottom: 20px;
+        }
+
+        .slide-card p {
+            font-size: 1.2rem;
+            color: #3b2a1f;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .slide-card .library-text {
+            background: #e9dbc9;
+            padding: 16px;
+            border-radius: 48px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c4b2c;
+            margin: 20px 0;
+        }
+
+        .slide-card button {
+            background: #ffb347;
+            border: none;
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 12px 32px;
+            border-radius: 60px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 10px;
+            transition: 0.2s;
+            color: #2c1a0f;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .slide-card button:hover {
+            background: #ff9f1c;
+            transform: scale(1.02);
+        }
+
+        .book-stack {
+            font-size: 3rem;
+            margin: 15px 0;
+        }
+
+        /* Основной интерфейс игры (скрыт до приветствия) */
+        .game-main {
+            transition: opacity 0.2s;
+        }
+
+        .room-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .room-btn {
+            background: #c9ae7a;
+            border: none;
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 60px;
+            color: #2c1a0f;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .room-btn.active {
+            background: #ffc107;
+            box-shadow: 0 0 0 3px #a5672e, 0 5px 12px black;
+            transform: scale(0.98);
+        }
+
+        .room-btn:hover {
+            background: #e7b574;
+            transform: translateY(-2px);
+        }
+
+        .room-area {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            border-radius: 36px;
+            overflow: hidden;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.3);
+            background: #d9c5a7;
+        }
+
+        .room-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: 550px;
+            object-fit: contain;
+            background: #e5d5b6;
+            cursor: crosshair;
+        }
+
+        .click-zone {
+            position: absolute;
+            cursor: pointer;
+            background-color: rgba(255, 215, 0, 0.25);
+            border: 2px solid rgba(255, 100, 0, 0.7);
+            border-radius: 12px;
+            transition: 0.05s linear;
+        }
+
+        .click-zone:hover {
+            background-color: rgba(255, 200, 0, 0.5);
+            border-color: #ff6600;
+            transform: scale(1.01);
+        }
+
+        /* Панель предметов */
+        .items-panel {
+            background: #faf0df;
+            border-radius: 50px;
+            padding: 18px 20px;
+            margin-top: 10px;
+            box-shadow: inset 0 0 0 2px #fff8, 0 5px 12px rgba(0,0,0,0.2);
+        }
+
+        .items-title {
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #3b2a1f;
+            border-bottom: 2px dashed #c0a16b;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .items-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            row-gap: 15px;
+        }
+
+        .item-card {
+            background: #fff6ea;
+            padding: 8px 20px;
+            border-radius: 60px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #4e321d;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 110px;
+            justify-content: center;
+        }
+
+        .item-card.found {
+            text-decoration: line-through;
+            background: #bdb28b;
+            color: #2c241a;
+            opacity: 0.7;
+        }
+
+        .item-emoji {
+            font-size: 1.5rem;
+        }
+
+        .reset-room {
+            background: #c2823a;
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            border-radius: 30px;
+            padding: 6px 18px;
+            margin-left: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .reset-room:hover {
+            background: #a56124;
+        }
+
+        .win-message {
+            text-align: center;
+            background: gold;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 32px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #1f2c0a;
+        }
+
+        /* Персонаж-гид (Способ 1: отдельный блок под комнатой) */
+        .character-outside {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 20px;
+            background: #efdecb;
+            margin: 15px 0 0 0;
+            padding: 12px 25px;
+            border-radius: 80px;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .character-avatar {
+            width: 70px;
+            height: 70px;
+            background: #e2cfb0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: inset 0 0 0 3px white, 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .character-speech {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #4a3724;
+            background: white;
+            padding: 8px 24px;
+            border-radius: 40px;
+            display: inline-block;
+            flex: 1;
+            text-align: center;
+        }
+
+        .fact-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e2a2f;
+            color: #ffefcf;
+            max-width: 85vw;
+            width: 500px;
+            padding: 14px 24px;
+            border-radius: 60px;
+            font-size: 1rem;
+            text-align: center;
+            font-weight: bold;
+            backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.85);
+            border-left: 8px solid #ffb347;
+            border-right: 8px solid #ffb347;
+            z-index: 1100;
+            pointer-events: none;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #876b46;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 700px) {
+            .item-card { font-size: 1rem; padding: 5px 12px; min-width: 85px; }
+            .room-btn { font-size: 1rem; padding: 6px 18px; }
+            .character-speech { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Слайд-приветствие (показывается первым) -->
+<div id="welcomeSlide" class="slide-overlay">
+    <div class="slide-card">
+        <div class="book-stack">📚✨</div>
+        <h1>🎩 Добро пожаловать! 🐕</h1>
+        <p>Ты попал в волшебную игру-поиск по трём знаменитым книгам.</p>
+        <p><strong>«Гарри Поттер», «Каштанка», «Том Сойер»</strong> — ждут тебя!</p>
+        <p>🔍 В каждой комнате спрятано 4 предмета. Нажимай на золотистые зоны, находи их, узнавай интересные факты и становись знатоком литературы!</p>
+        <button id="startGameBtn">🚀 Начать поиск!</button>
+    </div>
+</div>
+
+<!-- Основной блок игры (изначально скрыт) -->
+<div id="gameMain" class="game-main" style="display: none;">
+    <div class="game-container">
+        <div class="room-tabs" id="tabsContainer"></div>
+        <div class="room-area" id="roomArea">
+            <img id="roomImage" class="room-image" alt="комната" src="">
+            <div id="zonesContainer"></div>
+        </div>
+
+        <!-- ПЕРСОНАЖ-ГИД (Способ 1: отдельно, не перекрывает картинку) -->
+        <div class="character-outside" id="characterBox">
+    <div class="character-avatar" id="characterEmoji">
+        <img id="characterImg" src="" alt="гид" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+    </div>
+    <div class="character-speech" id="characterSpeech">Найди все предметы в комнате!</div>
+</div>
+
+        <div class="items-panel">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
+                <div class="items-title" id="roomTitle">Предметы комнаты</div>
+                <button class="reset-room" id="resetRoomBtn">⟳ Сбросить комнату</button>
+            </div>
+            <div class="items-list" id="itemsList"></div>
+        </div>
+        <div id="winMessage" class="win-message" style="display: none;">✨ ВСЕ ПРЕДМЕТЫ НАЙДЕНЫ! ✨</div>
+        <footer>📖 Каждый найденный предмет расскажет интересный факт — читайте книги!</footer>
+    </div>
+</div>
+
+<!-- Финальный слайд (библиотека) -->
+<div id="finishSlide" class="slide-overlay" style="display: none;">
+    <div class="slide-card">
+        <div class="book-stack">🏫📚📖</div>
+        <h2>🎉 Ты прошёл игру! 🎉</h2>
+        <p>Ты нашёл все предметы в трёх комнатах и узнал много интересного!</p>
+        <div class="library-text">
+            🌟 Эти книги и множество других ждут тебя <br>
+            <strong>в нашей ШКОЛЬНОЙ БИБЛИОТЕКЕ!</strong> 🌟<br>
+            📍 Спроси у библиотекаря — и мир приключений откроется перед тобой.
+        </div>
+        <p>«Гарри Поттер», «Каштанка», «Том Сойер» – это только начало.</p>
+        <button id="restartFromLibraryBtn">🔁 Играть снова</button>
+    </div>
+</div>
+
+<script>
+    // ---------- КОНФИГ КОМНАТ + ФАКТЫ ----------
+    const ROOMS = [
+        {
+            id: "hp",
+            name: "Гарри Поттер",
+            image: "image/room_1.jpg",
+	    characterImage: "image/p_1.jpg",
+            items: [
+                { name: "очки", id: "glasses", coords: { x: 45, y: 58, w: 14, h: 8 }, fact: "🧙‍♂️ Круглые очки Гарри Поттера — такие же, как у Джоан Роулинг. Они стали символом мальчика, который выжил!" },
+                { name: "палочка", id: "wand", coords: { x: 68, y: 58, w: 12, h: 32 }, fact: "✨ Палочка из падуба с пером феникса. Та самая, что победила Волан-де-Морта!" },
+                { name: "сова", id: "owl", coords: { x: 79, y: 35, w: 12, h: 30 }, fact: "🦉 Букля — первая подруга Гарри в Хогвартсе. Совы в мире магии доставляют почту и никогда не теряются." },
+                { name: "шарф", id: "scarf", coords: { x: 52, y: 78, w: 24, h: 10 }, fact: "🧣 Шарф Гриффиндора (алый и золотой) — символ храбрости и верности своим друзьям." }
+            ]
+        },
+        {
+            id: "kashtanka",
+            name: "Каштанка",
+            image: "image/room_2.jpg",
+characterImage: "image/p_2.jpg",
+
+            items: [
+                { name: "гусь", id: "goose", coords: { x: 57, y: 60, w: 18, h: 32 }, fact: "🦢 Гусь Иван Иваныч — цирковой артист и лучший друг Каштанки. Очень умная птица!" },
+                { name: "арка", id: "arch", coords: { x: 49, y: 5, w: 40, h: 50 }, fact: "🎪 Цирковая арка, сквозь которую Каштанка училась прыгать. Там она стала звездой манежа." },
+                { name: "стружка", id: "sawdust", coords: { x: 35, y: 46, w: 14, h: 15 }, fact: "🪵 Столярная стружка из мастерской Луки. По запаху стружки Каштанка вспомнила своё прошлое." },
+                { name: "миска", id: "bowl", coords: { x: 51.5, y: 82, w: 10, h: 15 }, fact: "🥣 Простая миска — символ дома. Каштанка в конце рассказа выбрала любовь и верность." }
+            ]
+        },
+        {
+            id: "tom",
+            name: "Том Сойер",
+            image: "image/room_3.jpg",
+characterImage: "image/p_3.jpg",
+
+            items: [
+                { name: "кисть", id: "brush", coords: { x: 18, y: 48, w: 16, h: 22 }, fact: "🖌️ Кисть для побелки — символ гениальной хитрости Тома. Он заставил других платить за право работать!" },
+                { name: "ведро", id: "bucket", coords: { x: 25, y: 76, w: 14, h: 14 }, fact: "🪣 Ведро с известкой превратило наказание в развлечение. Гениальный план Тома!" },
+                { name: "яблоко", id: "apple", coords: { x: 78, y: 43, w: 10, h: 10 }, fact: "🍎 Яблоко — одна из «плат», которые Том получил за право красить забор." },
+                { name: "рогатка", id: "slingshot", coords: { x: 86, y: 20, w: 11, h: 12 }, fact: "🎯 Рогатка Тома — любимое оружие всех мальчишек Миссисипи. С ней он чувствовал себя настоящим разбойником." }
+            ]
+        }
+    ];
+
+    // ----- Звук -----
+    let audioCtx = null;
+    function playBeep() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume().then(() => beepInternal()).catch(e=>{});
+            else beepInternal();
+        } catch(e) {}
+    }
+    function beepInternal() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = 720;
+        gain.gain.value = 0.12;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.25);
+        osc.stop(audioCtx.currentTime + 0.25);
+    }
+
+    let currentRoomIndex = 0;
+    let foundPerRoom = { hp: new Set(), kashtanka: new Set(), tom: new Set() };
+    let activeToast = null;
+
+    function showFact(itemName, factText) {
+        if (activeToast) activeToast.remove();
+        const toast = document.createElement('div');
+        toast.className = 'fact-toast';
+        toast.innerHTML = `<strong>📖 ${itemName}</strong><br>✨ ${factText} ✨<br><span style="font-size:0.7rem;">📚 Прочитай книгу — узнаешь больше!</span>`;
+        document.body.appendChild(toast);
+        activeToast = toast;
+        setTimeout(() => {
+            if (toast && toast.parentNode) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) scale(0.8)';
+                setTimeout(() => { if(toast.parentNode) toast.remove(); if(activeToast===toast) activeToast=null; }, 250);
+            }
+        }, 5000);
+    }
+
+    // Обновление персонажа в зависимости от комнаты
+    function updateCharacterForRoom(roomId) {
+    const room = ROOMS[currentRoomIndex];
+    const charSpeech = document.getElementById('characterSpeech');
+    const charImg = document.getElementById('characterImg');
+    
+    // Меняем картинку
+    if (room && room.characterImage) {
+        charImg.src = room.characterImage;
+    }
+    
+    // Меняем текст
+    if (roomId === 'hp') {
+        charSpeech.innerText = 'В Хогвартсе полно волшебства! Найди очки, палочку, сову и шарф. Жми на золотые зоны!';
+    } else if (roomId === 'kashtanka') {
+        charSpeech.innerText = 'Каштанка потеряла свои вещи в цирке и мастерской. Помоги найти гуся, арку, стружку и миску!';
+    } else {
+        charSpeech.innerText = 'Йо-хо! Том Сойер ждёт тебя у забора. Найди кисть, ведро, яблоко и рогатку!';
+    }
+}
+
+    function renderCurrentRoom() {
+        const room = ROOMS[currentRoomIndex];
+        if (!room) return;
+        document.getElementById('roomImage').src = room.image;
+        document.getElementById('roomTitle').innerHTML = `📖 ${room.name}`;
+        updateCharacterForRoom(room.id);
+
+        const zonesContainer = document.getElementById('zonesContainer');
+        zonesContainer.innerHTML = '';
+        const foundSet = foundPerRoom[room.id] || new Set();
+
+        room.items.forEach(item => {
+            const isFound = foundSet.has(item.id);
+            const zone = document.createElement('div');
+            zone.className = 'click-zone';
+            zone.style.left = `${item.coords.x}%`;
+            zone.style.top = `${item.coords.y}%`;
+            zone.style.width = `${item.coords.w}%`;
+            zone.style.height = `${item.coords.h}%`;
+            zone.dataset.itemId = item.id;
+            zone.dataset.itemName = item.name;
+            zone.dataset.itemFact = item.fact;
+            if (isFound) {
+                zone.style.backgroundColor = 'rgba(100,200,100,0.35)';
+                zone.style.border = '2px solid #2e7d32';
+            } else {
+                zone.style.backgroundColor = 'rgba(255,215,0,0.3)';
+                zone.style.border = '2px solid #ff9800';
+            }
+            zone.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleItemClick(room.id, item.id, item.name, item.fact, zone);
+            });
+            zonesContainer.appendChild(zone);
+        });
+        renderItemsList(room, foundSet);
+        const allFound = room.items.every(i => foundSet.has(i.id));
+        const winDiv = document.getElementById('winMessage');
+        if (allFound && room.items.length) {
+            winDiv.style.display = 'block';
+            winDiv.innerText = `🏆 Молодец! Все предметы в "${room.name}" найдены! Переключай комнату выше. 🏆`;
+        } else {
+            winDiv.style.display = 'none';
+        }
+        // Проверка полного прохождения всех трёх комнат
+        checkFullGameComplete();
+    }
+
+    function renderItemsList(room, foundSet) {
+        const container = document.getElementById('itemsList');
+        container.innerHTML = '';
+        room.items.forEach(item => {
+            const isFound = foundSet.has(item.id);
+            const card = document.createElement('div');
+            card.className = `item-card ${isFound ? 'found' : ''}`;
+            let emoji = '🔍';
+            if (item.id === 'glasses') emoji = '👓'; else if (item.id === 'wand') emoji = '🪄';
+            else if (item.id === 'owl') emoji = '🦉'; else if (item.id === 'scarf') emoji = '🧣';
+            else if (item.id === 'goose') emoji = '🦢'; else if (item.id === 'arch') emoji = '🎪';
+            else if (item.id === 'sawdust') emoji = '🪵'; else if (item.id === 'bowl') emoji = '🥣';
+            else if (item.id === 'brush') emoji = '🖌️'; else if (item.id === 'bucket') emoji = '🪣';
+            else if (item.id === 'apple') emoji = '🍎'; else if (item.id === 'slingshot') emoji = '🎯';
+            card.innerHTML = `<span class="item-emoji">${emoji}</span> <span>${item.name}</span>`;
+            container.appendChild(card);
+        });
+    }
+
+    function handleItemClick(roomId, itemId, itemName, itemFact, zoneElement) {
+        const room = ROOMS[currentRoomIndex];
+        if (room.id !== roomId) return;
+        const foundSet = foundPerRoom[roomId];
+        if (foundSet.has(itemId)) {
+            zoneElement.style.transform = 'scale(0.97)';
+            setTimeout(() => { if(zoneElement) zoneElement.style.transform = ''; }, 150);
+            showFact(itemName, itemFact);
+            return;
+        }
+        foundSet.add(itemId);
+        playBeep();
+        zoneElement.style.backgroundColor = 'rgba(100,200,100,0.6)';
+        zoneElement.style.border = '2px solid #2e7d32';
+        zoneElement.style.transform = 'scale(0.96)';
+        setTimeout(() => { if(zoneElement) zoneElement.style.transform = ''; }, 150);
+        showFact(itemName, itemFact);
+        renderItemsList(room, foundSet);
+        const allFound = room.items.every(i => foundSet.has(i.id));
+        if (allFound) {
+            const winDiv = document.getElementById('winMessage');
+            winDiv.style.display = 'block';
+            winDiv.innerText = `🎉 Ура! Все предметы в "${room.name}" найдены! Переходи к следующей комнате. 🎉`;
+            playBeep();
+        }
+        const allZones = document.querySelectorAll('#zonesContainer .click-zone');
+        allZones.forEach(zone => {
+            const zId = zone.dataset.itemId;
+            if (foundSet.has(zId)) {
+                zone.style.backgroundColor = 'rgba(100,200,100,0.4)';
+                zone.style.border = '2px solid #2e7d32';
+            } else {
+                zone.style.backgroundColor = 'rgba(255,215,0,0.3)';
+                zone.style.border = '2px solid #ff9800';
+            }
+        });
+        checkFullGameComplete();
+    }
+
+    function checkFullGameComplete() {
+        const totalAll = ROOMS.every(room => {
+            const found = foundPerRoom[room.id];
+            return room.items.every(item => found.has(item.id));
+        });
+        if (totalAll) {
+            setTimeout(() => {
+                document.getElementById('finishSlide').style.display = 'flex';
+            }, 300);
+        }
+    }
+
+    function resetCurrentRoom() {
+        const room = ROOMS[currentRoomIndex];
+        if (!room) return;
+        foundPerRoom[room.id].clear();
+        renderCurrentRoom();
+        playBeep();
+        document.getElementById('winMessage').style.display = 'none';
+        if (activeToast) activeToast.remove();
+    }
+
+    function switchRoom(index) {
+        if (index === currentRoomIndex) return;
+        currentRoomIndex = index;
+        renderCurrentRoom();
+        const btns = document.querySelectorAll('.room-btn');
+        btns.forEach((btn, i) => { if (i === index) btn.classList.add('active'); else btn.classList.remove('active'); });
+    }
+
+    function buildTabs() {
+        const container = document.getElementById('tabsContainer');
+        container.innerHTML = '';
+        ROOMS.forEach((room, idx) => {
+            const btn = document.createElement('button');
+            btn.innerText = room.name;
+            btn.classList.add('room-btn');
+            if (idx === currentRoomIndex) btn.classList.add('active');
+            btn.addEventListener('click', () => switchRoom(idx));
+            container.appendChild(btn);
+        });
+    }
+
+    // Инициализация игры после приветствия
+    function startGame() {
+        document.getElementById('welcomeSlide').style.display = 'none';
+        document.getElementById('gameMain').style.display = 'block';
+        buildTabs();
+        renderCurrentRoom();
+        document.getElementById('resetRoomBtn').addEventListener('click', resetCurrentRoom);
+        const enableAudio = () => {
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            document.removeEventListener('click', enableAudio);
+            document.removeEventListener('touchstart', enableAudio);
+        };
+        document.addEventListener('click', enableAudio);
+        document.addEventListener('touchstart', enableAudio);
+    }
+
+    // Финальное перезапуск
+    document.getElementById('startGameBtn').addEventListener('click', startGame);
+    document.getElementById('restartFromLibraryBtn').addEventListener('click', () => {
+        // Сброс всего прогресса
+        foundPerRoom = { hp: new Set(), kashtanka: new Set(), tom: new Set() };
+        currentRoomIndex = 0;
+        document.getElementById('finishSlide').style.display = 'none';
+        document.getElementById('gameMain').style.display = 'none';
+        document.getElementById('welcomeSlide').style.display = 'flex';
+        if (activeToast) activeToast.remove();
+    });
+</script>
+</body>
+</html>
