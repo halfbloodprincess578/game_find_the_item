@@ -187,20 +187,20 @@
             cursor: crosshair;
         }
 
+        /* ---------- ЗОНЫ БЕЗ ПОДСВЕТКИ ---------- */
         .click-zone {
             position: absolute;
             cursor: pointer;
-            background-color: rgba(255, 215, 0, 0.25);
-            border: 2px solid rgba(255, 100, 0, 0.7);
-            border-radius: 12px;
-            transition: 0.05s linear;
+            background: transparent !important;
+            border: none !important;
         }
 
         .click-zone:hover {
-            background-color: rgba(255, 200, 0, 0.5);
-            border-color: #ff6600;
-            transform: scale(1.01);
+            background: transparent !important;
+            border: none !important;
+            transform: none !important;
         }
+        /* -------------------------------------- */
 
         /* Панель предметов */
         .items-panel {
@@ -282,7 +282,7 @@
             color: #1f2c0a;
         }
 
-        /* Персонаж-гид (Способ 1: отдельный блок под комнатой) */
+        /* Персонаж-гид */
         .character-outside {
             display: flex;
             align-items: center;
@@ -306,6 +306,13 @@
             justify-content: center;
             font-size: 3rem;
             box-shadow: inset 0 0 0 3px white, 0 4px 8px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .character-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
 
         .character-speech {
@@ -358,19 +365,19 @@
 </head>
 <body>
 
-<!-- Слайд-приветствие (показывается первым) -->
+<!-- Слайд-приветствие -->
 <div id="welcomeSlide" class="slide-overlay">
     <div class="slide-card">
         <div class="book-stack">📚✨</div>
         <h1>🎩 Добро пожаловать! 🐕</h1>
         <p>Ты попал в волшебную игру-поиск по трём знаменитым книгам.</p>
         <p><strong>«Гарри Поттер», «Каштанка», «Том Сойер»</strong> — ждут тебя!</p>
-        <p>🔍 В каждой комнате спрятано 4 предмета. Нажимай на золотистые зоны, находи их, узнавай интересные факты и становись знатоком литературы!</p>
+        <p>🔍 В каждой комнате спрятано 4 предмета. Нажимай на невидимые зоны, находи их, узнавай интересные факты и становись знатоком литературы!</p>
         <button id="startGameBtn">🚀 Начать поиск!</button>
     </div>
 </div>
 
-<!-- Основной блок игры (изначально скрыт) -->
+<!-- Основной блок игры -->
 <div id="gameMain" class="game-main" style="display: none;">
     <div class="game-container">
         <div class="room-tabs" id="tabsContainer"></div>
@@ -379,13 +386,13 @@
             <div id="zonesContainer"></div>
         </div>
 
-        <!-- ПЕРСОНАЖ-ГИД (Способ 1: отдельно, не перекрывает картинку) -->
+        <!-- Персонаж-гид -->
         <div class="character-outside" id="characterBox">
-    <div class="character-avatar" id="characterEmoji">
-        <img id="characterImg" src="" alt="гид" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-    </div>
-    <div class="character-speech" id="characterSpeech">Найди все предметы в комнате!</div>
-</div>
+            <div class="character-avatar" id="characterEmoji">
+                <img id="characterImg" src="" alt="гид">
+            </div>
+            <div class="character-speech" id="characterSpeech">Найди все предметы в комнате!</div>
+        </div>
 
         <div class="items-panel">
             <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
@@ -399,7 +406,7 @@
     </div>
 </div>
 
-<!-- Финальный слайд (библиотека) -->
+<!-- Финальный слайд -->
 <div id="finishSlide" class="slide-overlay" style="display: none;">
     <div class="slide-card">
         <div class="book-stack">🏫📚📖</div>
@@ -422,7 +429,7 @@
             id: "hp",
             name: "Гарри Поттер",
             image: "image/room_1.jpg",
-	    characterImage: "image/p_1.jpg",
+            characterImage: "image/p_1.jpg",
             items: [
                 { name: "очки", id: "glasses", coords: { x: 34, y: 42, w: 6, h: 12 }, fact: "🧙‍♂️ Круглые очки Гарри Поттера — такие же, как у Джоан Роулинг. Они стали символом мальчика, который выжил!" },
                 { name: "палочка", id: "wand", coords: { x: 4, y: 70, w: 7, h: 28 }, fact: "✨ Палочка из падуба с пером феникса." },
@@ -434,8 +441,7 @@
             id: "kashtanka",
             name: "Каштанка",
             image: "image/room_2.jpg",
-characterImage: "image/p_2.jpg",
-
+            characterImage: "image/p_2.jpg",
             items: [
                 { name: "гусь", id: "goose", coords: { x: 57, y: 60, w: 18, h: 32 }, fact: "🦢 Гусь Иван Иваныч — цирковой артист и лучший друг Каштанки. Очень умная птица!" },
                 { name: "арка", id: "arch", coords: { x: 49, y: 5, w: 40, h: 50 }, fact: "🎪 Цирковая арка, сквозь которую Каштанка училась прыгать. Там она стала звездой манежа." },
@@ -447,8 +453,7 @@ characterImage: "image/p_2.jpg",
             id: "tom",
             name: "Том Сойер",
             image: "image/room_3.jpg",
-characterImage: "image/p_3.jpg",
-
+            characterImage: "image/p_3.jpg",
             items: [
                 { name: "кисть", id: "brush", coords: { x: 59, y: 52, w: 6, h: 20 }, fact: "🖌️ Кисть для побелки — символ гениальной хитрости Тома. Он заставил других платить за право работать!" },
                 { name: "ведро", id: "bucket", coords: { x: 33, y: 65, w: 12, h: 22 }, fact: "🪣 Ведро с известкой превратило наказание в развлечение. Гениальный план Тома!" },
@@ -458,7 +463,6 @@ characterImage: "image/p_3.jpg",
         }
     ];
 
-    // ----- Звук -----
     let audioCtx = null;
     function playBeep() {
         try {
@@ -500,26 +504,21 @@ characterImage: "image/p_3.jpg",
         }, 5000);
     }
 
-    // Обновление персонажа в зависимости от комнаты
     function updateCharacterForRoom(roomId) {
-    const room = ROOMS[currentRoomIndex];
-    const charSpeech = document.getElementById('characterSpeech');
-    const charImg = document.getElementById('characterImg');
-    
-    // Меняем картинку
-    if (room && room.characterImage) {
-        charImg.src = room.characterImage;
+        const room = ROOMS[currentRoomIndex];
+        const charSpeech = document.getElementById('characterSpeech');
+        const charImg = document.getElementById('characterImg');
+        if (room && room.characterImage) {
+            charImg.src = room.characterImage;
+        }
+        if (roomId === 'hp') {
+            charSpeech.innerText = 'В Хогвартсе полно волшебства! Найди очки, палочку, сову и шарф. Жми на невидимые зоны!';
+        } else if (roomId === 'kashtanka') {
+            charSpeech.innerText = 'Каштанка потеряла свои вещи в цирке и мастерской. Помоги найти гуся, арку, стружку и миску!';
+        } else {
+            charSpeech.innerText = 'Йо-хо! Том Сойер ждёт тебя у забора. Найди кисть, ведро, яблоко и рогатку!';
+        }
     }
-    
-    // Меняем текст
-    if (roomId === 'hp') {
-        charSpeech.innerText = 'В Хогвартсе полно волшебства! Найди очки, палочку, сову и шарф. Жми на золотые зоны!';
-    } else if (roomId === 'kashtanka') {
-        charSpeech.innerText = 'Каштанка потеряла свои вещи в цирке и мастерской. Помоги найти гуся, арку, стружку и миску!';
-    } else {
-        charSpeech.innerText = 'Йо-хо! Том Сойер ждёт тебя у забора. Найди кисть, ведро, яблоко и рогатку!';
-    }
-}
 
     function renderCurrentRoom() {
         const room = ROOMS[currentRoomIndex];
@@ -533,7 +532,6 @@ characterImage: "image/p_3.jpg",
         const foundSet = foundPerRoom[room.id] || new Set();
 
         room.items.forEach(item => {
-            const isFound = foundSet.has(item.id);
             const zone = document.createElement('div');
             zone.className = 'click-zone';
             zone.style.left = `${item.coords.x}%`;
@@ -543,16 +541,10 @@ characterImage: "image/p_3.jpg",
             zone.dataset.itemId = item.id;
             zone.dataset.itemName = item.name;
             zone.dataset.itemFact = item.fact;
-            if (isFound) {
-                zone.style.backgroundColor = 'rgba(100,200,100,0.35)';
-                zone.style.border = '2px solid #2e7d32';
-            } else {
-                zone.style.backgroundColor = 'rgba(255,215,0,0.3)';
-                zone.style.border = '2px solid #ff9800';
-            }
+            // НИКАКОЙ ПОДСВЕТКИ — фон и граница отсутствуют (стили в CSS)
             zone.addEventListener('click', (e) => {
                 e.stopPropagation();
-                handleItemClick(room.id, item.id, item.name, item.fact, zone);
+                handleItemClick(room.id, item.id, item.name, item.fact);
             });
             zonesContainer.appendChild(zone);
         });
@@ -565,7 +557,6 @@ characterImage: "image/p_3.jpg",
         } else {
             winDiv.style.display = 'none';
         }
-        // Проверка полного прохождения всех трёх комнат
         checkFullGameComplete();
     }
 
@@ -588,43 +579,30 @@ characterImage: "image/p_3.jpg",
         });
     }
 
-    function handleItemClick(roomId, itemId, itemName, itemFact, zoneElement) {
+    function handleItemClick(roomId, itemId, itemName, itemFact) {
         const room = ROOMS[currentRoomIndex];
         if (room.id !== roomId) return;
         const foundSet = foundPerRoom[roomId];
-        if (foundSet.has(itemId)) {
-            zoneElement.style.transform = 'scale(0.97)';
-            setTimeout(() => { if(zoneElement) zoneElement.style.transform = ''; }, 150);
-            showFact(itemName, itemFact);
-            return;
-        }
-        foundSet.add(itemId);
-        playBeep();
-        zoneElement.style.backgroundColor = 'rgba(100,200,100,0.6)';
-        zoneElement.style.border = '2px solid #2e7d32';
-        zoneElement.style.transform = 'scale(0.96)';
-        setTimeout(() => { if(zoneElement) zoneElement.style.transform = ''; }, 150);
+        
+        // Всегда показываем факт (и для найденных, и для новых)
         showFact(itemName, itemFact);
-        renderItemsList(room, foundSet);
-        const allFound = room.items.every(i => foundSet.has(i.id));
-        if (allFound) {
-            const winDiv = document.getElementById('winMessage');
-            winDiv.style.display = 'block';
-            winDiv.innerText = `🎉 Ура! Все предметы в "${room.name}" найдены! Переходи к следующей комнате. 🎉`;
+        
+        if (!foundSet.has(itemId)) {
+            foundSet.add(itemId);
             playBeep();
-        }
-        const allZones = document.querySelectorAll('#zonesContainer .click-zone');
-        allZones.forEach(zone => {
-            const zId = zone.dataset.itemId;
-            if (foundSet.has(zId)) {
-                zone.style.backgroundColor = 'rgba(100,200,100,0.4)';
-                zone.style.border = '2px solid #2e7d32';
-            } else {
-                zone.style.backgroundColor = 'rgba(255,215,0,0.3)';
-                zone.style.border = '2px solid #ff9800';
+            // После нахождения обновляем список предметов
+            renderItemsList(room, foundSet);
+            
+            const allFound = room.items.every(i => foundSet.has(i.id));
+            if (allFound) {
+                const winDiv = document.getElementById('winMessage');
+                winDiv.style.display = 'block';
+                winDiv.innerText = `🎉 Ура! Все предметы в "${room.name}" найдены! Переходи к следующей комнате. 🎉`;
+                playBeep();
             }
-        });
-        checkFullGameComplete();
+            checkFullGameComplete();
+        }
+        // НИКАКОЙ ВИЗУАЛЬНОЙ ОБРАТНОЙ СВЯЗИ НА ЗОНАХ
     }
 
     function checkFullGameComplete() {
@@ -670,7 +648,6 @@ characterImage: "image/p_3.jpg",
         });
     }
 
-    // Инициализация игры после приветствия
     function startGame() {
         document.getElementById('welcomeSlide').style.display = 'none';
         document.getElementById('gameMain').style.display = 'block';
@@ -686,10 +663,8 @@ characterImage: "image/p_3.jpg",
         document.addEventListener('touchstart', enableAudio);
     }
 
-    // Финальное перезапуск
     document.getElementById('startGameBtn').addEventListener('click', startGame);
     document.getElementById('restartFromLibraryBtn').addEventListener('click', () => {
-        // Сброс всего прогресса
         foundPerRoom = { hp: new Set(), kashtanka: new Set(), tom: new Set() };
         currentRoomIndex = 0;
         document.getElementById('finishSlide').style.display = 'none';
